@@ -223,5 +223,16 @@ export const getBestCategory = (possibleScores, filledCategories) => {
     // If logic above works, `maxWeight` tracks the highest value found.
     // If array was empty (impossible if game checks), returns null.
 
+    // Fallback Safety:
+    // If we somehow didn't pick a category (e.g. logic error or all weights super negative),
+    // and we still have open categories, we MUST pick one to avoid game hang.
+    if (!bestCategory) {
+        for (const category of Object.keys(possibleScores)) {
+            if (!isFilled(category)) {
+                return category;
+            }
+        }
+    }
+
     return bestCategory;
 };
