@@ -3,6 +3,7 @@ import Dice from './Dice';
 import ScoreCard from './ScoreCard';
 import EndGameScoring from './EndGameScoring';
 import NameInput from './NameInput';
+import GameLog from './GameLog';
 import {
     calculatePossibleScores,
     calculateScore,
@@ -35,11 +36,22 @@ const GameBoard = () => {
     const [rolling, setRolling] = useState(false);
     const [message, setMessage] = useState('New Game! Roll to start.');
     const [isGameOver, setIsGameOver] = useState(false);
+    const [gameLog, setGameLog] = useState([]);
 
     // AI State
     const [aiProcessing, setAiProcessing] = useState(false);
 
     // --- Helpers ---
+    const addToLog = (player, isUser, category, score, diceValues) => {
+        setGameLog(prev => [{
+            player,
+            isUser,
+            category,
+            score,
+            dice: [...diceValues] // Copy
+        }, ...prev]);
+    };
+
     const wait = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
     const checkYahtzeeBonus = (diceValues, currentScores) => {
@@ -175,6 +187,7 @@ const GameBoard = () => {
             }
 
             setLastSelections(prev => ({ ...prev, ai: bestCat }));
+            addToLog(playerNames.ai, false, bestCat, score, diceVals);
         } else {
             // Fallback if something weird happens (e.g. no valid categories, unlikely)
             console.warn("AI found no best category, picking first available.");
@@ -183,6 +196,7 @@ const GameBoard = () => {
             if (firstCat) {
                 setAiScores(prev => ({ ...prev, [firstCat]: possible[firstCat] }));
                 setLastSelections(prev => ({ ...prev, ai: firstCat }));
+                addToLog(playerNames.ai, false, firstCat, possible[firstCat], diceVals);
             }
         }
 
@@ -248,6 +262,7 @@ const GameBoard = () => {
         const score = possibleScores[category];
         setUserScores(prev => ({ ...prev, [category]: score }));
         setLastSelections(prev => ({ ...prev, user: category }));
+        addToLog(playerNames.user, true, category, score, dice.map(d => d.value));
 
         // Check Bonus
         const values = dice.map(d => d.value);
@@ -275,6 +290,7 @@ const GameBoard = () => {
         setDice(Array.from({ length: 5 }, (_, i) => ({ id: i, value: 1, held: false })));
         setMessage('New Game!');
         setAiProcessing(false);
+        setGameLog([]);
     };
 
     const handlePlayAgain = () => {
@@ -289,6 +305,7 @@ const GameBoard = () => {
         setDice(Array.from({ length: 5 }, (_, i) => ({ id: i, value: 1, held: false })));
         setMessage(`Game Restarted! ${playerNames.user}'s turn.`);
         setAiProcessing(false);
+        setGameLog([]);
     };
 
     // --- Render ---
@@ -350,6 +367,8 @@ const GameBoard = () => {
                             <button className="btn-reset" onClick={handleReset}>New Game</button>
                         )}
                     </div>
+
+                    <GameLog log={gameLog} />
                 </div>
             </div>
 
