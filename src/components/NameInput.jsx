@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import './NameInput.css';
 
 const NameInput = ({ onStartGame }) => {
-    const [name, setName] = useState('You');
+    const [name, setName] = useState('');
 
     const handleSubmit = (e) => {
         e.preventDefault();
@@ -20,7 +20,7 @@ const NameInput = ({ onStartGame }) => {
                         type="text"
                         value={name}
                         onChange={(e) => setName(e.target.value)}
-                        placeholder="Your Name"
+                        placeholder="type in your name"
                         autoFocus
                         maxLength={12}
                     />
