@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import Dice from './Dice';
 import ScoreCard from './ScoreCard';
+import EndGameScoring from './EndGameScoring';
 import NameInput from './NameInput';
 import {
     calculatePossibleScores,
@@ -50,6 +51,7 @@ const GameBoard = () => {
     // 2. Game Over Check
     useEffect(() => {
         const totalCats = Object.keys(CATEGORIES).length;
+        // Check if all categories are filled
         if (Object.keys(userScores).length === totalCats &&
             Object.keys(aiScores).length === totalCats) {
             setIsGameOver(true);
@@ -297,6 +299,15 @@ const GameBoard = () => {
                     aiLabel={playerNames.ai}
                 />
             </div>
+
+            {isGameOver && (
+                <EndGameScoring
+                    userScores={userScores}
+                    aiScores={aiScores}
+                    playerNames={playerNames}
+                    onPlayAgain={handleReset}
+                />
+            )}
         </div>
     );
 };

@@ -26,6 +26,9 @@ const EndGameScoring = ({ userScores, aiScores, playerNames, onPlayAgain }) => {
     };
 
     useEffect(() => {
+        console.log("EndGameScoring Mounted");
+        console.log("Ordered Categories:", orderedCategories);
+
         let step = 0;
         // Safety: Ensure we have scores
         if (!userScores || !aiScores) {
@@ -47,6 +50,7 @@ const EndGameScoring = ({ userScores, aiScores, playerNames, onPlayAgain }) => {
 
             setCurrentStep(step);
             const cat = orderedCategories[step];
+            console.log("Step:", step, "Category:", cat);
 
             if (!cat) {
                 // Skip undefined categories if any
