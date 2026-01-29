@@ -1,24 +1,40 @@
 .score-card {
-    background: rgba(0, 0, 0, 0.4);
-    color: #eee;
+    background: rgba(0, 0, 0, 0.75);
+    color: #fff;
     padding: 25px;
     border-radius: 20px;
     width: 100%;
-    max-width: 420px;
-    /* Slightly wider for grid */
-    border: 1px solid rgba(255, 255, 255, 0.05);
+    max-width: 900px;
+    /* Increased for side-by-side */
+    border: 1px solid rgba(255, 255, 255, 0.1);
     font-family: inherit;
     display: flex;
     flex-direction: column;
     gap: 15px;
-    backdrop-filter: blur(10px);
+    backdrop-filter: blur(16px);
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+    margin-bottom: 50px;
+}
+
+/* Container for side-by-side sections */
+.score-sections-container {
+    display: flex;
+    gap: 30px;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+.section {
+    flex: 1;
+    min-width: 290px;
+    max-width: 450px;
 }
 
 .card-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.15);
     padding-bottom: 20px;
     margin-bottom: 10px;
 }
@@ -29,12 +45,12 @@
     grid-template-columns: 2fr 1fr 1fr;
     gap: 10px;
     align-items: center;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.15);
     padding-bottom: 10px;
-    margin-bottom: 5px;
+    margin-bottom: 20px;
     text-align: center;
-    font-size: 0.9rem;
-    color: #aaa;
+    font-size: 0.95rem;
+    color: #ccc;
     text-transform: uppercase;
     letter-spacing: 1px;
 }
@@ -46,13 +62,14 @@
 
 .header-name.active {
     color: var(--neon-blue);
-    text-shadow: 0 0 8px rgba(0, 255, 255, 0.5);
+    text-shadow: 0 0 10px rgba(0, 255, 255, 0.6);
     font-weight: bold;
 }
 
 .header-total {
-    font-size: 0.8em;
-    opacity: 0.8;
+    font-size: 0.85em;
+    opacity: 0.9;
+    color: #fff;
 }
 
 .card-header h2 {
@@ -65,14 +82,16 @@
 }
 
 .section h3 {
-    margin: 15px 0 10px 0;
-    font-size: 0.9rem;
+    margin: 5px 0 15px 0;
+    font-size: 1.1rem;
     text-transform: uppercase;
     color: var(--neon-blue);
     letter-spacing: 2px;
-    opacity: 0.8;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    opacity: 1;
     padding-bottom: 5px;
+    text-align: center;
+    text-shadow: 0 0 5px rgba(0, 255, 255, 0.3);
+    border-bottom: 2px solid rgba(255, 255, 255, 0.1);
 }
 
 /* Row Grid */
@@ -80,12 +99,13 @@
     display: grid;
     grid-template-columns: 2fr 1fr 1fr;
     gap: 10px;
-    padding: 8px 10px;
+    padding: 10px;
     border-radius: 8px;
     margin-bottom: 4px;
     transition: all 0.2s ease;
     align-items: center;
-    background: rgba(255, 255, 255, 0.02);
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid transparent;
 }
 
 .label {
@@ -93,47 +113,58 @@
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+    font-weight: 500;
 }
 
 .score-cell {
     text-align: center;
     font-weight: bold;
     font-family: 'Courier New', monospace;
-    font-size: 1.1rem;
-    padding: 4px;
+    font-size: 1.2rem;
+    padding: 6px;
     border-radius: 6px;
+    color: rgba(255, 255, 255, 0.9);
+}
+
+/* Winner Highlighting */
+.score-cell.winner {
+    color: #00ff00;
+    text-shadow: 0 0 8px rgba(0, 255, 0, 0.6);
+    background: rgba(0, 255, 0, 0.1);
+    border: 1px solid rgba(0, 255, 0, 0.2);
 }
 
 .score-row.filled {
-    background: rgba(255, 255, 255, 0.05);
+    background: rgba(255, 255, 255, 0.06);
 }
 
 /* Style for the User's score cell specifically when selectable */
 .score-cell.selectable {
     background: rgba(0, 255, 255, 0.05);
     cursor: pointer;
-    border: 1px solid rgba(0, 255, 255, 0.1);
+    border: 1px solid rgba(0, 255, 255, 0.2);
     transition: all 0.2s;
+    color: rgba(255, 255, 255, 0.7);
 }
 
 .score-cell.selectable:hover {
-    background: rgba(0, 255, 255, 0.2);
+    background: rgba(0, 255, 255, 0.25);
     color: #fff;
     border-color: var(--neon-blue);
-    box-shadow: 0 0 10px rgba(0, 255, 255, 0.2);
-    /* No transform/scale here to avoid "sharpness" jump */
+    box-shadow: 0 0 15px rgba(0, 255, 255, 0.2);
 }
 
 .summary-row {
     margin-top: 10px;
-    color: rgba(255, 255, 255, 0.6);
-    font-size: 0.9rem;
-    background: rgba(0, 0, 0, 0.2);
-    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    color: rgba(255, 255, 255, 0.75);
+    font-size: 0.95rem;
+    background: rgba(0, 0, 0, 0.3);
+    border-top: 1px solid rgba(255, 255, 255, 0.15);
+    font-weight: 600;
 }
 
 .bonus {
-    color: #888;
+    color: #aaa;
 }
 
 .bonus .earned {
@@ -142,8 +173,7 @@
     text-shadow: 0 0 10px rgba(0, 255, 0, 0.5);
 }
 
-.section-header,
-.grand-total-row {
+.section-header {
     display: grid;
     grid-template-columns: 2fr 1fr 1fr;
     gap: 10px;
@@ -156,14 +186,32 @@
     border-left: 3px solid var(--neon-purple);
 }
 
+/* Grand Total Row centered/flex */
 .grand-total-row {
-    border-left: 3px solid var(--neon-pink);
-    margin-top: 20px;
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    padding: 20px;
     background: rgba(255, 0, 255, 0.05);
+    border-radius: 12px;
+    margin-top: 20px;
+    border: 1px solid rgba(255, 0, 255, 0.2);
+    box-shadow: 0 0 20px rgba(255, 0, 255, 0.1);
+}
+
+.grand-total-row .label {
+    font-size: 1.5rem;
+    font-weight: 800;
+    color: #fff;
+    text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
 }
 
 .grand-total-row .score-cell {
+    font-size: 2rem;
     color: var(--neon-pink);
-    font-size: 1.3rem;
-    text-shadow: 0 0 5px rgba(255, 0, 255, 0.4);
+    text-shadow: 0 0 15px rgba(255, 0, 255, 0.6);
+    background: transparent;
+    padding: 10px 30px;
+    border: 2px solid var(--neon-pink);
+    border-radius: 50px;
 }

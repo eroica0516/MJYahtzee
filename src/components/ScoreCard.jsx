@@ -122,57 +122,65 @@ const ScoreCard = ({
 
     return (
         <div className="score-card">
-            <ScoreCardHeader
-                userTotal={userTotals.grandTotal}
-                aiTotal={aiTotals.grandTotal}
-                userLabel={userLabel}
-                aiLabel={aiLabel}
-                currentPlayer={isUserTurn ? 'user' : 'ai'}
-            />
-
-            <div className="section upper-section">
-                <h3>Upper Section</h3>
-                {upperCats.map(cat => (
-                    <ScoreRow
-                        key={cat}
-                        label={CATEGORY_LABELS[cat]}
-                        userScore={userScores[cat]}
-                        aiScore={aiScores[cat]}
-                        possibleScore={possibleScores[cat]}
-                        onSelect={() => onSelectCategory(cat)}
-                        isUserTurn={isUserTurn}
-                        isActive={isActiveTurn}
+            <div className="score-sections-container">
+                <div className="section upper-section">
+                    <ScoreCardHeader
+                        userTotal={userTotals.grandTotal}
+                        aiTotal={aiTotals.grandTotal}
+                        userLabel={userLabel}
+                        aiLabel={aiLabel}
+                        currentPlayer={isUserTurn ? 'user' : 'ai'}
                     />
-                ))}
+                    <h3>Upper Section</h3>
+                    {upperCats.map(cat => (
+                        <ScoreRow
+                            key={cat}
+                            label={CATEGORY_LABELS[cat]}
+                            userScore={userScores[cat]}
+                            aiScore={aiScores[cat]}
+                            possibleScore={possibleScores[cat]}
+                            onSelect={() => onSelectCategory(cat)}
+                            isUserTurn={isUserTurn}
+                            isActive={isActiveTurn}
+                        />
+                    ))}
 
-                <div className="score-row summary-row">
-                    <span className="label">Subtotal</span>
-                    <span className="score-cell user-cell">{userTotals.upperSum} / 63</span>
-                    <span className="score-cell ai-cell">{aiTotals.upperSum} / 63</span>
+                    <div className="score-row summary-row">
+                        <span className="label">Subtotal</span>
+                        <span className="score-cell user-cell">{userTotals.upperSum} / 63</span>
+                        <span className="score-cell ai-cell">{aiTotals.upperSum} / 63</span>
+                    </div>
+                    <div className="score-row summary-row bonus">
+                        <span className="label">Bonus</span>
+                        <span className={`score-cell user-cell ${userTotals.bonus > 0 ? 'earned' : ''}`}>+{userTotals.bonus}</span>
+                        <span className={`score-cell ai-cell ${aiTotals.bonus > 0 ? 'earned' : ''}`}>+{aiTotals.bonus}</span>
+                    </div>
+                    <SectionHeader title="Upper Total" userScore={userTotals.upperTotal} aiScore={aiTotals.upperTotal} />
                 </div>
-                <div className="score-row summary-row bonus">
-                    <span className="label">Bonus</span>
-                    <span className={`score-cell user-cell ${userTotals.bonus > 0 ? 'earned' : ''}`}>+{userTotals.bonus}</span>
-                    <span className={`score-cell ai-cell ${aiTotals.bonus > 0 ? 'earned' : ''}`}>+{aiTotals.bonus}</span>
-                </div>
-                <SectionHeader title="Upper Total" userScore={userTotals.upperTotal} aiScore={aiTotals.upperTotal} />
-            </div>
 
-            <div className="section lower-section">
-                <h3>Lower Section</h3>
-                {lowerCats.map(cat => (
-                    <ScoreRow
-                        key={cat}
-                        label={CATEGORY_LABELS[cat]}
-                        userScore={userScores[cat]}
-                        aiScore={aiScores[cat]}
-                        possibleScore={possibleScores[cat]}
-                        onSelect={() => onSelectCategory(cat)}
-                        isUserTurn={isUserTurn}
-                        isActive={isActiveTurn}
+                <div className="section lower-section">
+                    <ScoreCardHeader
+                        userTotal={userTotals.grandTotal}
+                        aiTotal={aiTotals.grandTotal}
+                        userLabel={userLabel}
+                        aiLabel={aiLabel}
+                        currentPlayer={isUserTurn ? 'user' : 'ai'}
                     />
-                ))}
-                <SectionHeader title="Lower Total" userScore={userTotals.lowerTotal} aiScore={aiTotals.lowerTotal} />
+                    <h3>Lower Section</h3>
+                    {lowerCats.map(cat => (
+                        <ScoreRow
+                            key={cat}
+                            label={CATEGORY_LABELS[cat]}
+                            userScore={userScores[cat]}
+                            aiScore={aiScores[cat]}
+                            possibleScore={possibleScores[cat]}
+                            onSelect={() => onSelectCategory(cat)}
+                            isUserTurn={isUserTurn}
+                            isActive={isActiveTurn}
+                        />
+                    ))}
+                    <SectionHeader title="Lower Total" userScore={userTotals.lowerTotal} aiScore={aiTotals.lowerTotal} />
+                </div>
             </div>
 
             <div className="grand-total-row">

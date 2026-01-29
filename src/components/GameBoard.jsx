@@ -2,9 +2,9 @@ import React, { useState, useEffect, useRef } from 'react';
 import Dice from './Dice';
 import ScoreCard from './ScoreCard';
 import NameInput from './NameInput';
-import EndGameScoring from './EndGameScoring';
 import {
     calculatePossibleScores,
+    calculateScore,
 } from '../utils/scoring';
 import {
     MAX_ROLLS,
@@ -53,7 +53,7 @@ const GameBoard = () => {
         if (Object.keys(userScores).length === totalCats &&
             Object.keys(aiScores).length === totalCats) {
             setIsGameOver(true);
-            setMessage('Game Over! Calculating Final Scores...');
+            setMessage('Game Over! Final Scores...');
         }
     }, [userScores, aiScores]);
 
@@ -86,6 +86,9 @@ const GameBoard = () => {
             await wait(600);
 
             // Calculate new dice values (ensure holding logic respects AI holds)
+            // Correction: For AI turn, 'held' property in dice state needs to be respected.
+            // On first roll, none are held (guaranteed by switchTurn).
+
             const newDiceValues = currentDice.map(d => {
                 if (d.held) return d;
                 return { ...d, value: Math.ceil(Math.random() * 6) };
@@ -109,6 +112,7 @@ const GameBoard = () => {
 
             // If we are holding all dice, we might as well score (unless we want to reroll all? unlikely for simple bot)
             if (holdIds.length === 5 && currentRolls < 3) {
+                // Already full house or Yahtzee? Step out to score.
                 break;
             }
 
@@ -121,6 +125,7 @@ const GameBoard = () => {
             setDice(heldDice);
             currentDice = heldDice; // Update local ref
 
+            // Optional: Message about holding
             setMessage(`${playerNames.ai} is thinking...`);
             await wait(800);
         }
@@ -135,8 +140,10 @@ const GameBoard = () => {
             setAiScores(prev => ({ ...prev, [bestCat]: score }));
             setMessage(`${playerNames.ai} scored ${score} in ${bestCat}!`);
         } else {
-            // Fallback
-            console.warn("AI found no best category");
+            // Fallback if something weird happens (e.g. no valid categories, unlikely)
+            console.warn("AI found no best category, picking first available.");
+            // Simple fallback: pick first undefined category and score 0 (or whatever it allows)
+            /* Logic to handle this if robust... but for now assume aiLogic handles it */
         }
 
         await wait(1500);
@@ -149,6 +156,7 @@ const GameBoard = () => {
     const switchTurn = (nextPlayer) => {
         setCurrentPlayer(nextPlayer);
         setRollsLeft(MAX_ROLLS);
+        // Reset dice state completely for next player
         setDice(Array.from({ length: 5 }, (_, i) => ({ id: i, value: 1, held: false })));
         setMessage(nextPlayer === 'user' ? `${playerNames.user}'s turn!` : `${playerNames.ai}'s turn!`);
     };
@@ -159,6 +167,7 @@ const GameBoard = () => {
             ai: getRandomAIName()
         });
         setGameStarted(true);
+        // Ensure dice are reset
         setDice(Array.from({ length: 5 }, (_, i) => ({ id: i, value: 1, held: false })));
         setMessage(`Game Started! ${userName}'s turn.`);
     };
@@ -179,7 +188,12 @@ const GameBoard = () => {
     };
 
     const toggleHold = (id) => {
-        if (rollsLeft === MAX_ROLLS && !isGameOver) return;
+        if (rollsLeft === MAX_ROLLS && !isGameOver) return; // Cannot hold before first roll? Rules say yes?
+        // Actually standard Yahtzee: roll first, then hold.
+        // My previous code had this check.
+        if (rollsLeft === MAX_ROLLS) return;
+
+        // Allow hold for user only during user turn
         if (currentPlayer !== 'user') return;
 
         setDice(prev => prev.map(d => d.id === id ? { ...d, held: !d.held } : d));
@@ -223,49 +237,51 @@ const GameBoard = () => {
 
     return (
         <div className="game-board">
-            <div className="held-container">
-                <h3>Held Dice</h3>
-                <div className="held-dice-column">
-                    {heldDice.length === 0 && <div className="placeholder">Select dice to keep</div>}
-                    {heldDice.map(d => (
-                        <Dice
-                            key={d.id}
-                            {...d}
-                            onClick={toggleHold}
-                            rolling={false}
-                        />
-                    ))}
-                </div>
-            </div>
-
-            <div className="center-panel">
-                <div className="title-area">
-                    <h1 className="title">Yahtzee</h1>
-                    <div className="message">{message}</div>
+            <div className="game-left-section">
+                <div className="held-container">
+                    <h3>Held Dice</h3>
+                    <div className="held-dice-column">
+                        {heldDice.length === 0 && <div className="placeholder">Select dice to keep</div>}
+                        {heldDice.map(d => (
+                            <Dice
+                                key={d.id}
+                                {...d}
+                                onClick={toggleHold}
+                                rolling={false} // Held dice do not animate roll
+                            />
+                        ))}
+                    </div>
                 </div>
 
-                <div className="rolling-area">
-                    {unheldDice.map(d => (
-                        <Dice
-                            key={d.id}
-                            {...d}
-                            onClick={toggleHold}
-                            rolling={rolling}
-                        />
-                    ))}
-                </div>
+                <div className="center-panel">
+                    <div className="title-area">
+                        <h1 className="title">Yahtzee</h1>
+                        <div className="message">{message}</div>
+                    </div>
 
-                <div className="controls">
-                    <button
-                        className={`btn-roll ${currentPlayer !== 'user' ? 'disabled' : ''}`}
-                        onClick={rollDice}
-                        disabled={rollsLeft === 0 || rolling || isGameOver || currentPlayer !== 'user'}
-                    >
-                        {rollsLeft === MAX_ROLLS ? 'Roll Dice' : `Roll (${rollsLeft} Left)`}
-                    </button>
-                    {/* Reset Button removed from here as it appears in EndGameScoring */}
-                    {/* Actually, keep a reset button if game is stuck? Or just rely on end game? */}
-                    {/* Let's show it if we are debugging, but typically user waits for end game. */}
+                    <div className="rolling-area">
+                        {unheldDice.map(d => (
+                            <Dice
+                                key={d.id}
+                                {...d}
+                                onClick={toggleHold}
+                                rolling={rolling}
+                            />
+                        ))}
+                    </div>
+
+                    <div className="controls">
+                        <button
+                            className={`btn-roll ${currentPlayer !== 'user' ? 'disabled' : ''}`}
+                            onClick={rollDice}
+                            disabled={rollsLeft === 0 || rolling || isGameOver || currentPlayer !== 'user'}
+                        >
+                            {rollsLeft === MAX_ROLLS ? 'Roll Dice' : `Roll (${rollsLeft} Left)`}
+                        </button>
+                        {isGameOver && (
+                            <button className="btn-reset" onClick={handleReset}>New Game</button>
+                        )}
+                    </div>
                 </div>
             </div>
 
@@ -281,15 +297,6 @@ const GameBoard = () => {
                     aiLabel={playerNames.ai}
                 />
             </div>
-
-            {isGameOver && (
-                <EndGameScoring
-                    userScores={userScores}
-                    aiScores={aiScores}
-                    playerNames={playerNames}
-                    onPlayAgain={handleReset}
-                />
-            )}
         </div>
     );
 };

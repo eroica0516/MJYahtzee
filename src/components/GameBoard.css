@@ -3,7 +3,8 @@
     justify-content: center;
     gap: 2rem;
     padding: 3rem;
-    max-width: 1400px;
+    max-width: 1600px;
+    /* Increased max-width */
     margin: 0 auto;
     background: var(--glass-bg);
     backdrop-filter: blur(12px);
@@ -12,12 +13,29 @@
     border: 1px solid var(--glass-border);
     box-shadow: var(--glass-shadow);
     min-height: 85vh;
+    flex-wrap: wrap;
+    /* Allow wrap for small screens effectively */
 }
 
-.held-container,
+/* Wrapper for Left Controls */
+.game-left-section {
+    display: flex;
+    flex: 1;
+    min-width: 600px;
+    /* Ensure controls have space */
+    gap: 2rem;
+}
+
 .right-panel {
     flex: 1;
-    min-width: 300px;
+    /* Allow equal growth */
+    min-width: 600px;
+    /* Ensure wide enough for side-by-side scorecard */
+}
+
+.held-container {
+    flex: 0.8;
+    /* Slightly smaller than center */
 }
 
 .center-panel {
