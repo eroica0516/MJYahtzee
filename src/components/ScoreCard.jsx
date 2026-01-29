@@ -9,7 +9,9 @@ const ScoreRow = ({
     possibleScore,
     onSelect,
     isUserTurn,
-    isActive
+    isActive,
+    isLastUserSelection,
+    isLastAiSelection
 }) => {
     const isUserFilled = userScore !== undefined && userScore !== null;
     const isAiFilled = aiScore !== undefined && aiScore !== null;
@@ -36,7 +38,8 @@ const ScoreRow = ({
                 className={`score-cell user-cell 
                     ${isUserFilled ? 'filled' : ''} 
                     ${showPossible ? 'selectable' : ''} 
-                    ${userWin ? 'winner' : ''}`}
+                    ${userWin ? 'winner' : ''}
+                    ${isLastUserSelection ? 'latest' : ''}`}
                 onClick={showPossible ? () => onSelect(true) : undefined}
             >
                 {isUserFilled ? userScore : (showPossible ? possibleScore : '-')}
@@ -45,7 +48,8 @@ const ScoreRow = ({
             {/* AI Column */}
             <div className={`score-cell ai-cell 
                 ${isAiFilled ? 'filled' : ''} 
-                ${aiWin ? 'winner' : ''}`}>
+                ${aiWin ? 'winner' : ''}
+                ${isLastAiSelection ? 'latest' : ''}`}>
                 {isAiFilled ? aiScore : '-'}
             </div>
         </div>
@@ -86,6 +90,9 @@ const ScoreCardHeader = ({ userTotal, aiTotal, userLabel, aiLabel, currentPlayer
 const ScoreCard = ({
     userScores,
     aiScores,
+    userYahtzeeBonus = 0,
+    aiYahtzeeBonus = 0,
+    lastSelections,
     possibleScores,
     onSelectCategory,
     isUserTurn,
@@ -96,7 +103,7 @@ const ScoreCard = ({
 
     const getScore = (scores, cat) => scores[cat] || 0;
 
-    const calculateTotal = (scores) => {
+    const calculateTotal = (scores, bonus = 0) => {
         const upperCats = [CATEGORIES.ONES, CATEGORIES.TWOS, CATEGORIES.THREES, CATEGORIES.FOURS, CATEGORIES.FIVES, CATEGORIES.SIXES];
         const lowerCats = [
             CATEGORIES.THREE_OF_A_KIND, CATEGORIES.FOUR_OF_A_KIND, CATEGORIES.FULL_HOUSE,
@@ -104,15 +111,16 @@ const ScoreCard = ({
         ];
 
         const upperSum = upperCats.reduce((acc, cat) => acc + getScore(scores, cat), 0);
-        const bonus = upperSum >= 63 ? 35 : 0;
-        const upperTotal = upperSum + bonus;
-        const lowerTotal = lowerCats.reduce((acc, cat) => acc + getScore(scores, cat), 0);
+        const upperBonus = upperSum >= 63 ? 35 : 0;
+        const upperTotal = upperSum + upperBonus;
+        const lowerSum = lowerCats.reduce((acc, cat) => acc + getScore(scores, cat), 0);
+        const lowerTotal = lowerSum + bonus; // Add Yahtzee Bonus to Lower Section Total (or just Grand Total)
 
-        return { upperSum, bonus, upperTotal, lowerTotal, grandTotal: upperTotal + lowerTotal };
+        return { upperSum, upperBonus, upperTotal, lowerTotal, lowerSum, yahtzeeBonus: bonus, grandTotal: upperTotal + lowerTotal };
     };
 
-    const userTotals = calculateTotal(userScores);
-    const aiTotals = calculateTotal(aiScores);
+    const userTotals = calculateTotal(userScores, userYahtzeeBonus);
+    const aiTotals = calculateTotal(aiScores, aiYahtzeeBonus);
 
     const upperCats = [CATEGORIES.ONES, CATEGORIES.TWOS, CATEGORIES.THREES, CATEGORIES.FOURS, CATEGORIES.FIVES, CATEGORIES.SIXES];
     const lowerCats = [
@@ -142,6 +150,8 @@ const ScoreCard = ({
                             onSelect={() => onSelectCategory(cat)}
                             isUserTurn={isUserTurn}
                             isActive={isActiveTurn}
+                            isLastUserSelection={lastSelections?.user === cat}
+                            isLastAiSelection={lastSelections?.ai === cat}
                         />
                     ))}
 
@@ -152,8 +162,8 @@ const ScoreCard = ({
                     </div>
                     <div className="score-row summary-row bonus">
                         <span className="label">Bonus</span>
-                        <span className={`score-cell user-cell ${userTotals.bonus > 0 ? 'earned' : ''}`}>+{userTotals.bonus}</span>
-                        <span className={`score-cell ai-cell ${aiTotals.bonus > 0 ? 'earned' : ''}`}>+{aiTotals.bonus}</span>
+                        <span className={`score-cell user-cell ${userTotals.upperBonus > 0 ? 'earned' : ''}`}>+{userTotals.upperBonus}</span>
+                        <span className={`score-cell ai-cell ${aiTotals.upperBonus > 0 ? 'earned' : ''}`}>+{aiTotals.upperBonus}</span>
                     </div>
                     <SectionHeader title="Upper Total" userScore={userTotals.upperTotal} aiScore={aiTotals.upperTotal} />
                 </div>
@@ -177,8 +187,21 @@ const ScoreCard = ({
                             onSelect={() => onSelectCategory(cat)}
                             isUserTurn={isUserTurn}
                             isActive={isActiveTurn}
+                            isLastUserSelection={lastSelections?.user === cat}
+                            isLastAiSelection={lastSelections?.ai === cat}
                         />
                     ))}
+                    {/* Add Yahtzee Bonus Row */}
+                    <div className="score-row summary-row bonus">
+                        <span className="label">Yahtzee Bonus</span>
+                        <span className={`score-cell user-cell ${userTotals.yahtzeeBonus > 0 ? 'earned' : ''}`}>
+                            {userTotals.yahtzeeBonus > 0 ? `+${userTotals.yahtzeeBonus}` : '-'}
+                        </span>
+                        <span className={`score-cell ai-cell ${aiTotals.yahtzeeBonus > 0 ? 'earned' : ''}`}>
+                            {aiTotals.yahtzeeBonus > 0 ? `+${aiTotals.yahtzeeBonus}` : '-'}
+                        </span>
+                    </div>
+
                     <SectionHeader title="Lower Total" userScore={userTotals.lowerTotal} aiScore={aiTotals.lowerTotal} />
                 </div>
             </div>

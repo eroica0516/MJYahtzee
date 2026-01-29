@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { CATEGORIES, CATEGORY_LABELS } from '../utils/gameRules';
 import './EndGameScoring.css';
 
-const EndGameScoring = ({ userScores, aiScores, playerNames, onPlayAgain }) => {
+const EndGameScoring = ({ userScores, aiScores, playerNames, onPlayAgain, userYahtzeeBonus = 0, aiYahtzeeBonus = 0 }) => {
     const [currentStep, setCurrentStep] = useState(-1);
     const [userTotal, setUserTotal] = useState(0);
     const [aiTotal, setAiTotal] = useState(0);
@@ -16,8 +16,9 @@ const EndGameScoring = ({ userScores, aiScores, playerNames, onPlayAgain }) => {
     // Flatten categories for iteration
     const orderedCategories = [
         ...[CATEGORIES.ONES, CATEGORIES.TWOS, CATEGORIES.THREES, CATEGORIES.FOURS, CATEGORIES.FIVES, CATEGORIES.SIXES],
-        'BONUS',
-        ...[CATEGORIES.THREE_OF_A_KIND, CATEGORIES.FOUR_OF_A_KIND, CATEGORIES.FULL_HOUSE, CATEGORIES.SMALL_STRAIGHT, CATEGORIES.LARGE_STRAIGHT, CATEGORIES.YAHTZEE, CATEGORIES.CHANCE]
+        'BONUS', // Upper Bonus
+        ...[CATEGORIES.THREE_OF_A_KIND, CATEGORIES.FOUR_OF_A_KIND, CATEGORIES.FULL_HOUSE, CATEGORIES.SMALL_STRAIGHT, CATEGORIES.LARGE_STRAIGHT, CATEGORIES.YAHTZEE, CATEGORIES.CHANCE],
+        'YAHTZEE_BONUS' // New Step
     ];
 
     const getScore = (scores, cat) => {
@@ -69,6 +70,9 @@ const EndGameScoring = ({ userScores, aiScores, playerNames, onPlayAgain }) => {
 
                     setUserTotal(prev => prev + uBonus);
                     setAiTotal(prev => prev + aBonus);
+                } else if (cat === 'YAHTZEE_BONUS') {
+                    setUserTotal(prev => prev + userYahtzeeBonus);
+                    setAiTotal(prev => prev + aiYahtzeeBonus);
                 } else {
                     const uVal = getScore(userScores, cat);
                     const aVal = getScore(aiScores, cat);
@@ -111,6 +115,8 @@ const EndGameScoring = ({ userScores, aiScores, playerNames, onPlayAgain }) => {
                         let label = '';
                         if (cat === 'BONUS') {
                             label = 'Upper Bonus (35)';
+                        } else if (cat === 'YAHTZEE_BONUS') {
+                            label = 'Yahtzee Bonus';
                         } else {
                             label = CATEGORY_LABELS[cat] || cat;
                         }
@@ -120,12 +126,13 @@ const EndGameScoring = ({ userScores, aiScores, playerNames, onPlayAgain }) => {
 
                         if (cat === 'BONUS') {
                             const upperCats = [CATEGORIES.ONES, CATEGORIES.TWOS, CATEGORIES.THREES, CATEGORIES.FOURS, CATEGORIES.FIVES, CATEGORIES.SIXES];
-                            // Safe check filter
-                            // ... existing logic ...
                             const uSum = upperCats.reduce((acc, c) => acc + getScore(userScores, c), 0);
                             const aSum = upperCats.reduce((acc, c) => acc + getScore(aiScores, c), 0);
                             uScore = uSum >= 63 ? 35 : 0;
                             aScore = aSum >= 63 ? 35 : 0;
+                        } else if (cat === 'YAHTZEE_BONUS') {
+                            uScore = userYahtzeeBonus;
+                            aScore = aiYahtzeeBonus;
                         } else {
                             uScore = getScore(userScores, cat);
                             aScore = getScore(aiScores, cat);

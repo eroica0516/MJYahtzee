@@ -1,4 +1,4 @@
-import { CATEGORIES } from './gameRules';
+import { CATEGORIES } from './gameRules.js';
 
 const sum = (dice) => dice.reduce((a, b) => a + b, 0);
 
@@ -10,7 +10,7 @@ const getFrequencies = (diceValues) => {
     return freqs;
 };
 
-export const calculateScore = (category, diceValues) => {
+export const calculateScore = (category, diceValues, isJoker = false) => {
     const freqs = getFrequencies(diceValues);
     const total = sum(diceValues);
     const values = new Set(diceValues);
@@ -32,28 +32,18 @@ export const calculateScore = (category, diceValues) => {
             return Object.values(freqs).some((count) => count >= 4) ? total : 0;
 
         case CATEGORIES.FULL_HOUSE: {
+            if (isJoker) return 25; // Joker rule: Forced Full House points
             const counts = Object.values(freqs);
-            const uniqueCount = counts.length;
-            // Full house is either [3, 2] or [5] (if Yahtzee plays as FH)
-            // Standard rules: 3 of one, 2 of another. 
-            // If 5 of a kind, it technically meets the condition (3 of X and 2 of X), but usually printed rules say 3 of one, 2 of ANOTHER.
-            // However, typical digital implementations allow Yahtzee to count as Full House (25 pts).
-            // Let's stick to standard: Must be 3 of one number and 2 of another.
             const hasThree = counts.includes(3);
             const hasTwo = counts.includes(2);
+            // Standard: 3 of one, 2 of another. (5 of a kind handled by Joker rule or treated as 0 otherwise by strict rules, but often accepted. Let's stick to strict + Joker)
             const isYahtzee = counts.includes(5);
-
-            // Allow Yahtzee as full house? Usually yes as a Joker, but let's be strict for now or check rules.
-            // Standard Hasbro rules: "3 of one number and 2 of another". So [5] is NOT a full house purely.
-            // But Joker rules apply if Yahtzee box is filled.
-            // We will handle Joker logic at the game level, here we calculate "natural" score.
             if ((hasThree && hasTwo) || isYahtzee) return 25;
             return 0;
         }
 
         case CATEGORIES.SMALL_STRAIGHT: {
-            // 4 sequential dice.
-            // 1-2-3-4, 2-3-4-5, 3-4-5-6
+            if (isJoker) return 30; // Joker rule
             const sortedUnique = Array.from(values).sort((a, b) => a - b);
             let run = 0;
             let maxRun = 0;
@@ -65,15 +55,12 @@ export const calculateScore = (category, diceValues) => {
                 }
                 if (run > maxRun) maxRun = run;
             }
-            return maxRun >= 3 ? 30 : 0; // run of 3 pairs means 4 numbers
+            return maxRun >= 3 ? 30 : 0;
         }
 
         case CATEGORIES.LARGE_STRAIGHT: {
+            if (isJoker) return 40; // Joker rule
             const sortedUnique = Array.from(values).sort((a, b) => a - b);
-            // Must be 5 sequential
-            // 1-2-3-4-5 or 2-3-4-5-6
-            // Since unique, length must be 5 and max-min = 4? No, could be 1,2,3,4,6 (range 5).
-            // Just check if it matches exactly.
             const str = sortedUnique.join('');
             return (str === '12345' || str === '23456') ? 40 : 0;
         }
@@ -89,10 +76,47 @@ export const calculateScore = (category, diceValues) => {
     }
 };
 
-export const calculatePossibleScores = (diceValues) => {
+export const calculatePossibleScores = (diceValues, currentScores = {}) => {
+    // Detect Joker Condition:
+    // 1. It is a Yahtzee (5 of a kind)
+    // 2. The Yahtzee category is already filled (score is not undefined)
+    const freqs = getFrequencies(diceValues);
+    const isYahtzeeRoll = Object.values(freqs).includes(5);
+    const yahtzeeFilled = currentScores[CATEGORIES.YAHTZEE] !== undefined && currentScores[CATEGORIES.YAHTZEE] !== null;
+
+    // Joker applies if we rolled a Yahtzee but the slot is already filled
+    const isJoker = isYahtzeeRoll && yahtzeeFilled;
+
+    // Helper map to find category for a number
+    const numberToCategory = {
+        1: CATEGORIES.ONES,
+        2: CATEGORIES.TWOS,
+        3: CATEGORIES.THREES,
+        4: CATEGORIES.FOURS,
+        5: CATEGORIES.FIVES,
+        6: CATEGORIES.SIXES
+    };
+
+    let forcedCategory = null;
+    if (isJoker) {
+        // Find the number rolled
+        const rolledNumber = parseInt(Object.keys(freqs).find(key => freqs[key] === 5));
+        const correspondingCat = numberToCategory[rolledNumber];
+
+        // If corresponding upper section is empty, MUST choose it
+        if (currentScores[correspondingCat] === undefined || currentScores[correspondingCat] === null) {
+            forcedCategory = correspondingCat;
+        }
+    }
+
     const scores = {};
     Object.values(CATEGORIES).forEach((cat) => {
-        scores[cat] = calculateScore(cat, diceValues);
+        // If we are forced to a specific category, only calculate for that one
+        if (forcedCategory && cat !== forcedCategory) {
+            return; // undefined score = not selectable
+        }
+
+        scores[cat] = calculateScore(cat, diceValues, isJoker);
     });
     return scores;
 };

@@ -25,7 +25,12 @@ const GameBoard = () => {
     const [rollsLeft, setRollsLeft] = useState(MAX_ROLLS);
     const [userScores, setUserScores] = useState({});
     const [aiScores, setAiScores] = useState({});
+    // New State for Bonus
+    const [userYahtzeeBonus, setUserYahtzeeBonus] = useState(0);
+    const [aiYahtzeeBonus, setAiYahtzeeBonus] = useState(0);
+
     const [possibleScores, setPossibleScores] = useState({});
+    const [lastSelections, setLastSelections] = useState({ user: null, ai: null });
 
     const [rolling, setRolling] = useState(false);
     const [message, setMessage] = useState('New Game! Roll to start.');
@@ -37,16 +42,35 @@ const GameBoard = () => {
     // --- Helpers ---
     const wait = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
+    const checkYahtzeeBonus = (diceValues, currentScores) => {
+        const counts = {};
+        diceValues.forEach(v => counts[v] = (counts[v] || 0) + 1);
+        const hasYahtzee = Object.values(counts).includes(5);
+        // Bonus only if we have a Yahtzee AND we already scored 50 in the Yahtzee box
+        // Rule: "You get a 100 bonus points in the Yahtzee box" (if 50)
+        // If 0 in Yahtzee box, NO bonus.
+        return hasYahtzee && currentScores[CATEGORIES.YAHTZEE] === 50;
+    };
+
+    const isJokerActive = (diceValues, currentScores) => {
+        const counts = {};
+        diceValues.forEach(v => counts[v] = (counts[v] || 0) + 1);
+        const hasYahtzee = Object.values(counts).includes(5);
+        // Joker active if Yahtzee and Yahtzee box filled (0 or 50)
+        const yahtzeeFilled = currentScores[CATEGORIES.YAHTZEE] !== undefined && currentScores[CATEGORIES.YAHTZEE] !== null;
+        return hasYahtzee && yahtzeeFilled;
+    };
+
     // --- Effects ---
 
     // 1. Calculate Possible Scores (User only)
     useEffect(() => {
         if (currentPlayer === 'user' && !rolling && rollsLeft < MAX_ROLLS && !isGameOver) {
-            setPossibleScores(calculatePossibleScores(dice.map(d => d.value)));
+            setPossibleScores(calculatePossibleScores(dice.map(d => d.value), userScores));
         } else {
             setPossibleScores({});
         }
-    }, [dice, rolling, rollsLeft, currentPlayer, isGameOver]);
+    }, [dice, rolling, rollsLeft, currentPlayer, isGameOver, userScores]);
 
     // 2. Game Over Check
     useEffect(() => {
@@ -134,18 +158,32 @@ const GameBoard = () => {
 
         // 3. Final Scoring
         setMessage(`${playerNames.ai} is scoring...`);
-        const possible = calculatePossibleScores(currentDice.map(d => d.value));
+        const diceVals = currentDice.map(d => d.value);
+        const possible = calculatePossibleScores(diceVals, aiScores); // Use new signature
         const bestCat = getBestCategory(possible, aiScores);
 
         if (bestCat) {
             const score = possible[bestCat];
             setAiScores(prev => ({ ...prev, [bestCat]: score }));
-            setMessage(`${playerNames.ai} scored ${score} in ${bestCat}!`);
+
+            // AI Bonus Check
+            if (checkYahtzeeBonus(diceVals, aiScores)) {
+                setAiYahtzeeBonus(prev => prev + 100);
+                setMessage(`${playerNames.ai} scored ${score} in ${bestCat} + 100 Bonus!`);
+            } else {
+                setMessage(`${playerNames.ai} scored ${score} in ${bestCat}!`);
+            }
+
+            setLastSelections(prev => ({ ...prev, ai: bestCat }));
         } else {
             // Fallback if something weird happens (e.g. no valid categories, unlikely)
             console.warn("AI found no best category, picking first available.");
-            // Simple fallback: pick first undefined category and score 0 (or whatever it allows)
-            /* Logic to handle this if robust... but for now assume aiLogic handles it */
+            // Pick first key from possible check
+            const firstCat = Object.keys(possible)[0];
+            if (firstCat) {
+                setAiScores(prev => ({ ...prev, [firstCat]: possible[firstCat] }));
+                setLastSelections(prev => ({ ...prev, ai: firstCat }));
+            }
         }
 
         await wait(1500);
@@ -209,6 +247,14 @@ const GameBoard = () => {
         // Score it
         const score = possibleScores[category];
         setUserScores(prev => ({ ...prev, [category]: score }));
+        setLastSelections(prev => ({ ...prev, user: category }));
+
+        // Check Bonus
+        const values = dice.map(d => d.value);
+        if (checkYahtzeeBonus(values, userScores)) {
+            setUserYahtzeeBonus(prev => prev + 100);
+            setMessage(`Bonus! +100 Points!`);
+        }
 
         // Switch to AI
         switchTurn('ai');
@@ -220,11 +266,28 @@ const GameBoard = () => {
         setIsGameOver(false);
         setUserScores({});
         setAiScores({});
+        setUserYahtzeeBonus(0);
+        setAiYahtzeeBonus(0);
+        setLastSelections({ user: null, ai: null });
         setPlayerNames({ user: 'You', ai: 'Computer' });
         setCurrentPlayer('user');
         setRollsLeft(MAX_ROLLS);
         setDice(Array.from({ length: 5 }, (_, i) => ({ id: i, value: 1, held: false })));
         setMessage('New Game!');
+        setAiProcessing(false);
+    };
+
+    const handlePlayAgain = () => {
+        // Soft Reset - Keep names, restart game
+        setIsGameOver(false);
+        setUserScores({});
+        setAiScores({});
+        setUserYahtzeeBonus(0);
+        setAiYahtzeeBonus(0);
+        setCurrentPlayer('user');
+        setRollsLeft(MAX_ROLLS);
+        setDice(Array.from({ length: 5 }, (_, i) => ({ id: i, value: 1, held: false })));
+        setMessage(`Game Restarted! ${playerNames.user}'s turn.`);
         setAiProcessing(false);
     };
 
@@ -237,8 +300,11 @@ const GameBoard = () => {
     const heldDice = dice.filter(d => d.held);
     const unheldDice = dice.filter(d => !d.held);
 
+    // Determine Joker Cursor
+    const showJokerCursor = currentPlayer === 'user' && !rolling && isJokerActive(dice.map(d => d.value), userScores);
+
     return (
-        <div className="game-board">
+        <div className={`game-board ${showJokerCursor ? 'joker-cursor' : ''}`}>
             <div className="game-left-section">
                 <div className="held-container">
                     <h3>Held Dice</h3>
@@ -291,6 +357,7 @@ const GameBoard = () => {
                 <ScoreCard
                     userScores={userScores}
                     aiScores={aiScores}
+                    lastSelections={lastSelections}
                     possibleScores={possibleScores}
                     onSelectCategory={handleCategorySelect}
                     isUserTurn={!isGameOver && currentPlayer === 'user' && rollsLeft < MAX_ROLLS}
@@ -305,7 +372,9 @@ const GameBoard = () => {
                     userScores={userScores}
                     aiScores={aiScores}
                     playerNames={playerNames}
-                    onPlayAgain={handleReset}
+                    onPlayAgain={handlePlayAgain}
+                    userYahtzeeBonus={userYahtzeeBonus}
+                    aiYahtzeeBonus={aiYahtzeeBonus}
                 />
             )}
         </div>
