@@ -1,0 +1,17 @@
+/* App.css - Minimal cleanup */
+#root {
+  max-width: 1400px;
+  margin: 0 auto;
+  text-align: center;
+}
+
+/* Animations can stay if needed, but modernizing them is better */
+@keyframes logo-spin {
+  from {
+    transform: rotate(0deg);
+  }
+
+  to {
+    transform: rotate(360deg);
+  }
+}

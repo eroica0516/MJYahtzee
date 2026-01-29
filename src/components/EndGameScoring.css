@@ -1,0 +1,138 @@
+.end-game-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.85);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 2000;
+    backdrop-filter: blur(8px);
+}
+
+.end-game-modal {
+    background-color: #fff;
+    width: 500px;
+    max-height: 90vh;
+    border-radius: 15px;
+    padding: 2rem;
+    box-shadow: 0 0 50px rgba(255, 255, 255, 0.2);
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+}
+
+.end-game-modal h2 {
+    text-align: center;
+    margin-top: 0;
+    color: #333;
+    font-size: 2rem;
+    margin-bottom: 1.5rem;
+    border-bottom: 2px solid #eee;
+    padding-bottom: 1rem;
+}
+
+.scoring-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    margin-bottom: 1.5rem;
+}
+
+.grid-header,
+.grid-row {
+    display: grid;
+    grid-template-columns: 2fr 1fr 1fr;
+    text-align: center;
+    padding: 0.5rem;
+    border-radius: 6px;
+}
+
+.grid-header {
+    font-weight: bold;
+    background-color: #333;
+    color: white;
+}
+
+.grid-row {
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.grid-row.highlight {
+    background-color: #fff9c4;
+    transform: scale(1.02);
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    font-weight: bold;
+    transition: all 0.2s;
+}
+
+.cat-label {
+    text-align: left;
+    padding-left: 0.5rem;
+}
+
+.total-display {
+    border-top: 3px solid #333;
+    padding-top: 1rem;
+    margin-top: auto;
+}
+
+.total-row {
+    display: grid;
+    grid-template-columns: 2fr 1fr 1fr;
+    text-align: center;
+    font-size: 1.5rem;
+    font-weight: bold;
+}
+
+.total-score.user {
+    color: #1976d2;
+}
+
+.total-score.ai {
+    color: #d32f2f;
+}
+
+.winner-announcement {
+    text-align: center;
+    margin-top: 2rem;
+    animation: popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.winner-announcement h3 {
+    font-size: 2.5rem;
+    color: #4CAF50;
+    margin: 0 0 1.5rem 0;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.btn-play-again {
+    background-color: #2196F3;
+    color: white;
+    border: none;
+    padding: 1rem 2rem;
+    font-size: 1.2rem;
+    border-radius: 50px;
+    cursor: pointer;
+    box-shadow: 0 4px 10px rgba(33, 150, 243, 0.3);
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.btn-play-again:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 6px 15px rgba(33, 150, 243, 0.4);
+}
+
+@keyframes popIn {
+    from {
+        opacity: 0;
+        transform: scale(0.5);
+    }
+
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
