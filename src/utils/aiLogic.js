@@ -1,6 +1,11 @@
 import { CATEGORIES, MAX_ROLLS } from './gameRules';
 
-const AI_NAMES = ['Bot Bill', 'Robo Mike', 'Lisa CP', 'Hal 9000', 'Data'];
+const AI_NAMES = [
+    'Titan', 'Behemoth', 'Vanguard', 'Strider', 'Nemesis',
+    'Apex', 'Quantum', 'Cipher', 'Alpha', 'Omega',
+    'Sentinel', 'Maverick', 'Vortex', 'Zenith', 'Goliath',
+    'Phantom', 'Thunder', 'Blaze', 'Warlord', 'Shadow'
+];
 
 export const getRandomAIName = () => {
     return AI_NAMES[Math.floor(Math.random() * AI_NAMES.length)];
