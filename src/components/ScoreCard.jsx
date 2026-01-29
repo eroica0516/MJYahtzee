@@ -177,30 +177,36 @@ const ScoreCard = ({
                         currentPlayer={isUserTurn ? 'user' : 'ai'}
                     />
                     <h3>Lower Section</h3>
-                    {lowerCats.map(cat => (
-                        <ScoreRow
-                            key={cat}
-                            label={CATEGORY_LABELS[cat]}
-                            userScore={userScores[cat]}
-                            aiScore={aiScores[cat]}
-                            possibleScore={possibleScores[cat]}
-                            onSelect={() => onSelectCategory(cat)}
-                            isUserTurn={isUserTurn}
-                            isActive={isActiveTurn}
-                            isLastUserSelection={lastSelections?.user === cat}
-                            isLastAiSelection={lastSelections?.ai === cat}
-                        />
-                    ))}
-                    {/* Add Yahtzee Bonus Row */}
-                    <div className="score-row summary-row bonus">
-                        <span className="label">Yahtzee Bonus</span>
-                        <span className={`score-cell user-cell ${userTotals.yahtzeeBonus > 0 ? 'earned' : ''}`}>
-                            {userTotals.yahtzeeBonus > 0 ? `+${userTotals.yahtzeeBonus}` : '-'}
-                        </span>
-                        <span className={`score-cell ai-cell ${aiTotals.yahtzeeBonus > 0 ? 'earned' : ''}`}>
-                            {aiTotals.yahtzeeBonus > 0 ? `+${aiTotals.yahtzeeBonus}` : '-'}
-                        </span>
-                    </div>
+                    {lowerCats.map(cat => {
+                        let uScore = userScores[cat];
+                        let aScore = aiScores[cat];
+
+                        // Merge Bonus into Yahtzee Score for display
+                        if (cat === CATEGORIES.YAHTZEE) {
+                            if (uScore !== undefined && userYahtzeeBonus > 0) {
+                                uScore += userYahtzeeBonus;
+                            }
+                            if (aScore !== undefined && aiYahtzeeBonus > 0) {
+                                aScore += aiYahtzeeBonus;
+                            }
+                        }
+
+                        return (
+                            <ScoreRow
+                                key={cat}
+                                label={CATEGORY_LABELS[cat]}
+                                userScore={uScore}
+                                aiScore={aScore}
+                                possibleScore={possibleScores[cat]}
+                                onSelect={() => onSelectCategory(cat)}
+                                isUserTurn={isUserTurn}
+                                isActive={isActiveTurn}
+                                isLastUserSelection={lastSelections?.user === cat}
+                                isLastAiSelection={lastSelections?.ai === cat}
+                            />
+                        );
+                    })}
+
 
                     <SectionHeader title="Lower Total" userScore={userTotals.lowerTotal} aiScore={aiTotals.lowerTotal} />
                 </div>

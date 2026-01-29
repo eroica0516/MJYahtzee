@@ -147,7 +147,7 @@ export const getBestHold = (dice, scores, rollsLeft) => {
  */
 export const getBestCategory = (possibleScores, filledCategories) => {
     let bestCategory = null;
-    let maxWeight = -1000; // Allow negatives for "bad choices"
+    let maxWeight = -Infinity;
 
     const isFilled = (cat) => filledCategories[cat] !== undefined;
 
@@ -159,54 +159,57 @@ export const getBestCategory = (possibleScores, filledCategories) => {
         // --- Weight Adjustments ---
 
         // 1. YAHTZEE
+        // Always take Yahtzee if it's a valid 50 points (or 0 if we must scratch it)
         if (category === CATEGORIES.YAHTZEE) {
-            if (score === 50) weight += 1000; // Always take Yahtzee
-            else weight = -100; // Never take 0 on Yahtzee unless forced (handled later)
+            if (score === 50) weight += 1000;
+            else weight -= 50; // Try not to scratch Yahtzee unless necessary
         }
 
         // 2. Upper Section Logic
-        if (['ONES', 'TWOS', 'THREES', 'FOURS', 'FIVES', 'SIXES'].includes(category)) {
-            // Target: 3 of a kind for upper (e.g. 3x6 = 18).
-            // If score >= 3 * val, good. Else bad.
-            const valMap = { ONES: 1, TWOS: 2, THREES: 3, FOURS: 4, FIVES: 5, SIXES: 6 };
+        // Prioritize filling Upper Section to catch the 35pt bonus
+        if ([CATEGORIES.ONES, CATEGORIES.TWOS, CATEGORIES.THREES, CATEGORIES.FOURS, CATEGORIES.FIVES, CATEGORIES.SIXES].includes(category)) {
+            const valMap = {
+                [CATEGORIES.ONES]: 1, [CATEGORIES.TWOS]: 2, [CATEGORIES.THREES]: 3,
+                [CATEGORIES.FOURS]: 4, [CATEGORIES.FIVES]: 5, [CATEGORIES.SIXES]: 6
+            };
             const val = valMap[category];
-            const target = val * 3;
+            const target = val * 3; // Par score (3 of a kind)
 
             if (score >= target) {
-                weight += 20; // Great! Helps bonus.
+                weight += 20; // Good roll for this number
             } else if (score === 0) {
-                // Taking a 0 on Upper
-                if (val <= 2) weight -= 5; // 1s and 2s are fine to "trash"
-                else weight -= 20 * val; // Don't trash 4s/5s/6s easily
+                // Scratching logic
+                if (val <= 2) weight -= 5; // Aces/Twos are fine to scratch
+                else weight -= 20 * val; // Don't scratch high numbers
             } else {
-                // Sub-par score (e.g. two 6s = 12). 
-                // Okay fallback, but maybe look for Chance?
+                // Sub-par score (e.g. 2 of a kind)
                 weight -= 5;
             }
         }
 
         // 3. Lower Section Logic
 
-        // Straights: Fixed scores (30/40)
-        // If 0, heavy penalty? No, taking 0 on straights is common if we missed.
-        // But we prefer filling "trash" (1s, 2s) over 0-ing a straight early.
+        // Straights: 
+        // If we have them (score > 0), they are valuable.
+        // If score is 0, apply penalty to avoid scratching them early
         if ((category === CATEGORIES.SMALL_STRAIGHT || category === CATEGORIES.LARGE_STRAIGHT) && score === 0) {
-            weight -= 15; // Try not to X out straights too early
+            weight -= 20;
         }
 
-        // Full House: 25.
-        if (category === CATEGORIES.FULL_HOUSE) {
-            if (score === 25) weight += 15;
-        }
+        // Full House:
+        // No artificial boost needed. 25 pts is solid. 
+        // If we have a Joker (forced Full House), scoring 25 is better than 0.
+        // But if Joker gives Large Straight (40), the raw score (40) dominates (25).
+        // This ensures proper Joker strategy.
 
-        // Chance: Sum.
-        // Save chance for High Sums when other boxes fail.
+        // Chance:
+        // Save for high rolls.
         if (category === CATEGORIES.CHANCE) {
-            if (score < 20) weight -= 10; // Don't waste Chance on low roll
+            if (score < 20) weight -= 15;
         }
 
-        // 3/4 of a Kind: Sum.
-        // If score is low (< 15), treat as poor.
+        // 3/4 of a Kind:
+        // Avoid taking low scores here
         if (category === CATEGORIES.THREE_OF_A_KIND || category === CATEGORIES.FOUR_OF_A_KIND) {
             if (score < 15 && score > 0) weight -= 5;
             if (score === 0) weight -= 10;
@@ -218,24 +221,11 @@ export const getBestCategory = (possibleScores, filledCategories) => {
         }
     }
 
-    // Fallback: If all weights are terrible (e.g. forced to take a 0),
-    // we need to pick the "least bad" option.
-    // The loop above already calculates weights, so `maxWeight` should point to the least bad.
-    // But if maxWeight is very negative, it means we are taking a 0 or wasted category.
-    // Ideally we "trash" Ones or Twos.
-
-    // Re-check: Did we pick 'null' or existing best?
-    // If logic above works, `maxWeight` tracks the highest value found.
-    // If array was empty (impossible if game checks), returns null.
-
-    // Fallback Safety:
-    // If we somehow didn't pick a category (e.g. logic error or all weights super negative),
-    // and we still have open categories, we MUST pick one to avoid game hang.
+    // Fallback if no best category found (should not happen if possibleScores has options)
     if (!bestCategory) {
+        // Pick first available
         for (const category of Object.keys(possibleScores)) {
-            if (!isFilled(category)) {
-                return category;
-            }
+            if (!isFilled(category)) return category;
         }
     }
 

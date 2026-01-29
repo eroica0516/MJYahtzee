@@ -44,6 +44,7 @@ const GameBoard = () => {
     // --- Helpers ---
     const addToLog = (player, isUser, category, score, diceValues) => {
         setGameLog(prev => [{
+            turnNumber: prev.length + 1,
             player,
             isUser,
             category,
@@ -305,6 +306,7 @@ const GameBoard = () => {
         setDice(Array.from({ length: 5 }, (_, i) => ({ id: i, value: 1, held: false })));
         setMessage(`Game Restarted! ${playerNames.user}'s turn.`);
         setAiProcessing(false);
+        setLastSelections({ user: null, ai: null });
         setGameLog([]);
     };
 
@@ -318,7 +320,8 @@ const GameBoard = () => {
     const unheldDice = dice.filter(d => !d.held);
 
     // Determine Joker Cursor
-    const showJokerCursor = currentPlayer === 'user' && !rolling && isJokerActive(dice.map(d => d.value), userScores);
+    // Only show if user has rolled at least once (rollsLeft < MAX_ROLLS)
+    const showJokerCursor = currentPlayer === 'user' && !rolling && rollsLeft < MAX_ROLLS && isJokerActive(dice.map(d => d.value), userScores);
 
     return (
         <div className={`game-board ${showJokerCursor ? 'joker-cursor' : ''}`}>

@@ -4,10 +4,9 @@
     border-radius: 8px;
     padding: 10px;
     width: 100%;
-    /* Remove max-height to fill space, use flex logic in parent or min-height */
-    flex: 1;
-    min-height: 200px;
-    /* Ensure at least some height */
+    /* Remove flex: 1 and use fixed height */
+    height: 320px;
+    /* Approx 8 items */
     overflow-y: auto;
     font-family: 'Roboto', sans-serif;
     color: #e0e0e0;
@@ -36,8 +35,8 @@
     padding: 0;
     margin: 0;
     display: flex;
-    flex-direction: column-reverse;
-    /* Newest first? Or standard list with auto-scroll? User asked for log. Usually newest at bottom is standard for chat/logs, but for game history, seeing the last move at top might be nice. Let's stick to standard chronological order (newest at bottom) and scroll to bottom, OR display reverse order. Let's do reverse order so newest is always at top without scrolling. */
+    flex-direction: column;
+    /* Normal order (top to bottom) */
 }
 
 .log-entry {

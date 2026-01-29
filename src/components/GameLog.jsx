@@ -31,6 +31,7 @@ const GameLog = ({ log }) => {
                     <li key={index} className="log-entry">
                         <div className="log-info">
                             <span className={`log-player-name ${entry.isUser ? 'user' : 'ai'}`}>
+                                <span style={{ color: '#888', marginRight: '5px', fontSize: '0.75rem' }}>#{entry.turnNumber}</span>
                                 {entry.player}
                             </span>
                             <span className="log-action">

@@ -17,8 +17,7 @@ const EndGameScoring = ({ userScores, aiScores, playerNames, onPlayAgain, userYa
     const orderedCategories = [
         ...[CATEGORIES.ONES, CATEGORIES.TWOS, CATEGORIES.THREES, CATEGORIES.FOURS, CATEGORIES.FIVES, CATEGORIES.SIXES],
         'BONUS', // Upper Bonus
-        ...[CATEGORIES.THREE_OF_A_KIND, CATEGORIES.FOUR_OF_A_KIND, CATEGORIES.FULL_HOUSE, CATEGORIES.SMALL_STRAIGHT, CATEGORIES.LARGE_STRAIGHT, CATEGORIES.YAHTZEE, CATEGORIES.CHANCE],
-        'YAHTZEE_BONUS' // New Step
+        ...[CATEGORIES.THREE_OF_A_KIND, CATEGORIES.FOUR_OF_A_KIND, CATEGORIES.FULL_HOUSE, CATEGORIES.SMALL_STRAIGHT, CATEGORIES.LARGE_STRAIGHT, CATEGORIES.YAHTZEE, CATEGORIES.CHANCE]
     ];
 
     const getScore = (scores, cat) => {
@@ -70,12 +69,15 @@ const EndGameScoring = ({ userScores, aiScores, playerNames, onPlayAgain, userYa
 
                     setUserTotal(prev => prev + uBonus);
                     setAiTotal(prev => prev + aBonus);
-                } else if (cat === 'YAHTZEE_BONUS') {
-                    setUserTotal(prev => prev + userYahtzeeBonus);
-                    setAiTotal(prev => prev + aiYahtzeeBonus);
                 } else {
-                    const uVal = getScore(userScores, cat);
-                    const aVal = getScore(aiScores, cat);
+                    let uVal = getScore(userScores, cat);
+                    let aVal = getScore(aiScores, cat);
+
+                    if (cat === CATEGORIES.YAHTZEE) {
+                        uVal += userYahtzeeBonus;
+                        aVal += aiYahtzeeBonus;
+                    }
+
                     setUserTotal(prev => prev + uVal);
                     setAiTotal(prev => prev + aVal);
                 }
@@ -115,8 +117,6 @@ const EndGameScoring = ({ userScores, aiScores, playerNames, onPlayAgain, userYa
                         let label = '';
                         if (cat === 'BONUS') {
                             label = 'Upper Bonus (35)';
-                        } else if (cat === 'YAHTZEE_BONUS') {
-                            label = 'Yahtzee Bonus';
                         } else {
                             label = CATEGORY_LABELS[cat] || cat;
                         }
@@ -130,12 +130,14 @@ const EndGameScoring = ({ userScores, aiScores, playerNames, onPlayAgain, userYa
                             const aSum = upperCats.reduce((acc, c) => acc + getScore(aiScores, c), 0);
                             uScore = uSum >= 63 ? 35 : 0;
                             aScore = aSum >= 63 ? 35 : 0;
-                        } else if (cat === 'YAHTZEE_BONUS') {
-                            uScore = userYahtzeeBonus;
-                            aScore = aiYahtzeeBonus;
                         } else {
                             uScore = getScore(userScores, cat);
                             aScore = getScore(aiScores, cat);
+
+                            if (cat === CATEGORIES.YAHTZEE) {
+                                uScore += userYahtzeeBonus;
+                                aScore += aiYahtzeeBonus;
+                            }
                         }
 
                         return (
